@@ -1,0 +1,33 @@
+# Environment / secrets
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+*.pyc
+
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

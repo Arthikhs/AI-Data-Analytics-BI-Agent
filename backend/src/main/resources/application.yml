@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: bi-analytics-agent
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bi_analytics
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 60000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+
+server:
+  port: 8080
+
+ai-service:
+  base-url: ${AI_SERVICE_URL:http://localhost:8000}
+  timeout: 60000
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:bi-agent-secret-key-minimum-256-bits-long-change-in-production}
+    expiration: 86400000  # 24 hours
+
+query:
+  max-rows: 10000
+  timeout-seconds: 30
+  allowed-operations:
+    - SELECT
+
+logging:
+  level:
+    com.biagent: DEBUG
+    org.springframework.security: INFO
