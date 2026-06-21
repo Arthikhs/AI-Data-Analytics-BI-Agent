@@ -90,8 +90,13 @@ public class QueryController {
                     .success(true)
                     .build());
         } catch (SecurityException e) {
+            log.warn("Direct SQL execution blocked: {}", e.getMessage());
             return ResponseEntity.badRequest().body(QueryResponse.builder()
                     .success(false).error(e.getMessage()).build());
+        } catch (Exception e) {
+            log.error("Direct SQL execution failed", e);
+            return ResponseEntity.internalServerError().body(QueryResponse.builder()
+                    .success(false).error("Execution failed: " + e.getMessage()).build());
         }
     }
 

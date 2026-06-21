@@ -3,6 +3,7 @@ package com.biagent.analytics.service;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -25,7 +26,7 @@ public class QueryValidatorService {
             throw new IllegalArgumentException("SQL query cannot be empty");
         }
 
-        String normalized = sql.trim().toUpperCase();
+        String normalized = sql.trim().toUpperCase(Locale.ROOT);
 
         // Must start with SELECT
         if (!normalized.startsWith("SELECT")) {

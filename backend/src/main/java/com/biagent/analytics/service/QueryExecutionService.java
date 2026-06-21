@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -39,7 +40,7 @@ public class QueryExecutionService {
      * Appends LIMIT clause if not already present
      */
     private String appendLimit(String sql, int limit) {
-        String upper = sql.trim().toUpperCase();
+        String upper = sql.trim().toUpperCase(Locale.ROOT);
         if (!upper.contains("LIMIT")) {
             return sql.trim() + " LIMIT " + limit;
         }

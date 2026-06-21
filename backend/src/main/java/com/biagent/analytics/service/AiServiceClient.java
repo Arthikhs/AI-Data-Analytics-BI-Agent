@@ -52,6 +52,7 @@ public class AiServiceClient {
                     .map(r -> (String) r.get("chart_type"))
                     .block();
         } catch (Exception e) {
+            log.warn("Chart type suggestion failed, using default", e);
             return "bar"; // default fallback
         }
     }
