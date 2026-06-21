@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'bi-ai-service'
+    static_configs:
+      - targets: ['ai-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'bi-backend'
+    static_configs:
+      - targets: ['backend:8080']
+    metrics_path: '/actuator/prometheus'

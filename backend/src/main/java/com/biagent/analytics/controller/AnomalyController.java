@@ -1,6 +1,5 @@
 package com.biagent.analytics.controller;
 
-import com.biagent.analytics.service.AiServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

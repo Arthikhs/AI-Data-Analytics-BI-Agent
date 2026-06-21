@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import query, insights, forecast, anomaly, reports
+from app.routers.enterprise.enterprise_router import router as enterprise_router
+from app.services.enterprise.observability import record_metric
+from prometheus_fastapi_instrumentator import Instrumentator
+import time
 import uvicorn
 
 app = FastAPI(
@@ -21,7 +25,18 @@ app.include_router(query.chart_router, prefix="/suggest-chart",  tags=["Query"])
 app.include_router(insights.router, prefix="/generate-insights", tags=["Insights"])
 app.include_router(forecast.router, prefix="/forecast",          tags=["Forecast"])
 app.include_router(anomaly.router,  prefix="/anomaly",           tags=["Anomaly"])
-app.include_router(reports.router,  prefix="/reports",           tags=["Reports"])
+app.include_router(reports.router,     prefix="/reports",           tags=["Reports"])
+app.include_router(enterprise_router,  prefix="/enterprise",         tags=["Enterprise"])
+
+Instrumentator().instrument(app).expose(app)
+
+@app.middleware("http")
+async def observability_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    record_metric("api_latency", elapsed_ms, {"path": request.url.path, "method": request.method})
+    return response
 
 @app.get("/health")
 def health():

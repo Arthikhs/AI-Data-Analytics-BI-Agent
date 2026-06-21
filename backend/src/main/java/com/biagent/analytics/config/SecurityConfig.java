@@ -53,6 +53,14 @@ public class SecurityConfig {
     }
 
     @Bean
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder encoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(encoder);
+        return provider;
+    }
+
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
@@ -60,10 +68,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/auth/**") // login endpoint is stateless
-                .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
-            )
+            .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -71,6 +76,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "ANALYST", "VIEWER")
                 .requestMatchers("/api/query/**", "/api/insights/**", "/api/forecast/**").hasAnyRole("ADMIN", "ANALYST")
                 .requestMatchers("/api/reports/**").hasAnyRole("ADMIN", "ANALYST")
+                .requestMatchers("/api/enterprise/schema/**", "/api/enterprise/data-quality",
+                                  "/api/enterprise/observability/**").hasAnyRole("ADMIN", "ANALYST", "VIEWER")
+                .requestMatchers("/api/enterprise/rls/**", "/api/enterprise/alerts/rules",
+                                  "/api/enterprise/schedules/**").hasRole("ADMIN")
+                .requestMatchers("/api/enterprise/**").hasAnyRole("ADMIN", "ANALYST")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
