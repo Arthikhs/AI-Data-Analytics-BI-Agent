@@ -118,3 +118,7 @@ export const observabilityService = {
   metrics: (metric_type: string, limit = 100) =>
     api.get(`${E}/observability/metrics/${metric_type}`, { params: { limit } }).then(r => r.data),
 }
+
+export const queryOptimizerService = {
+  optimize: (sql: string) => api.post('/optimizer', { sql }).then(r => r.data),
+}

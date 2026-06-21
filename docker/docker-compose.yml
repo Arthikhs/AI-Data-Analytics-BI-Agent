@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile
     container_name: bi_ai_service
     ports:
-      - "8001:8000"
+      - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/bi_analytics

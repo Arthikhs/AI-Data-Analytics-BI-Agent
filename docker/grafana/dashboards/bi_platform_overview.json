@@ -1,105 +1,180 @@
 {
-  "uid": "bi-platform-overview",
-  "title": "AI BI Platform — Overview",
-  "tags": ["bi-platform"],
-  "timezone": "browser",
-  "schemaVersion": 38,
-  "refresh": "30s",
-  "time": { "from": "now-1h", "to": "now" },
+  "__inputs": [],
+  "__requires": [],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
   "panels": [
     {
-      "id": 1,
-      "title": "API Request Rate (req/s)",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "targets": [{
-        "expr": "rate(http_requests_total[1m])",
-        "legendFormat": "{{method}} {{handler}}",
-        "datasource": "Prometheus"
-      }],
-      "fieldConfig": {
-        "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }
-      }
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 10,
+      "title": "API Performance",
+      "type": "row"
     },
     {
-      "id": 2,
-      "title": "API Latency P95 (ms)",
-      "type": "timeseries",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "targets": [{
-        "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000",
-        "legendFormat": "p95 {{handler}}",
-        "datasource": "Prometheus"
-      }],
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2 },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(http_requests_total[1m])",
+          "legendFormat": "{{method}} {{handler}}",
+          "refId": "A"
+        }
+      ],
+      "title": "API Request Rate (req/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } }
-      }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+          "legendFormat": "P95 {{handler}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+          "legendFormat": "P50 {{handler}}",
+          "refId": "B"
+        }
+      ],
+      "title": "API Latency — P95 & P50 (ms)",
+      "type": "timeseries"
     },
     {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 0.01 },
+            { "color": "red", "value": 0.05 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 9 },
       "id": 3,
-      "title": "HTTP Error Rate",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
-      "targets": [{
-        "expr": "rate(http_requests_total{status=~\"5..\"}[1m])",
-        "legendFormat": "5xx errors {{handler}}",
-        "datasource": "Prometheus"
-      }],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "color": { "fixedColor": "red", "mode": "fixed" }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])",
+          "legendFormat": "Error Rate",
+          "refId": "A"
         }
-      }
+      ],
+      "title": "Error Rate",
+      "type": "stat"
     },
     {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 100 },
+            { "color": "red", "value": 500 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 9 },
       "id": 4,
-      "title": "Total Requests (Last Hour)",
-      "type": "stat",
-      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
-      "targets": [{
-        "expr": "sum(increase(http_requests_total[1h]))",
-        "legendFormat": "Total",
-        "datasource": "Prometheus"
-      }],
-      "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "fixedColor": "blue", "mode": "fixed" } }
-      }
-    },
-    {
-      "id": 5,
-      "title": "AI Service Health",
-      "type": "stat",
-      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
-      "targets": [{
-        "expr": "up{job=\"ai-service\"}",
-        "legendFormat": "AI Service",
-        "datasource": "Prometheus"
-      }],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "red", "value": 0 }, { "color": "green", "value": 1 }]
-          }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "increase(http_requests_total[1h])",
+          "legendFormat": "Requests / hr",
+          "refId": "A"
         }
-      }
+      ],
+      "title": "Requests Last Hour",
+      "type": "stat"
     },
     {
-      "id": 6,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 500 },
+            { "color": "red", "value": 2000 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 9 },
+      "id": 5,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+          "legendFormat": "P95 Latency",
+          "refId": "A"
+        }
+      ],
+      "title": "P95 Latency (ms)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "id": 11,
       "title": "Request Duration Heatmap",
-      "type": "heatmap",
-      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
-      "targets": [{
-        "expr": "sum(rate(http_request_duration_seconds_bucket[5m])) by (le)",
-        "legendFormat": "{{le}}",
-        "datasource": "Prometheus",
-        "format": "heatmap"
-      }]
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "scaleDistribution": { "type": "log", "log": 2 } } } },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 18 },
+      "id": 6,
+      "options": {
+        "calculate": false,
+        "yAxis": { "unit": "ms" },
+        "color": { "mode": "scheme", "scheme": "Spectral" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "sum(rate(http_request_duration_seconds_bucket[5m])) by (le)",
+          "format": "heatmap",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Request Duration Heatmap",
+      "type": "heatmap"
     }
-  ]
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["bi-platform", "api", "performance"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "BI Platform Overview",
+  "uid": "bi-platform-overview",
+  "version": 1
 }

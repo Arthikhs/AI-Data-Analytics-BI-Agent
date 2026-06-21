@@ -16,6 +16,8 @@ import AlertsPage from './pages/enterprise/AlertsPage'
 import ScheduledReports from './pages/enterprise/ScheduledReports'
 import SecurityPolicies from './pages/enterprise/SecurityPolicies'
 import Observability from './pages/enterprise/Observability'
+import DataAgent from './pages/agent/DataAgent'
+import QueryOptimizer from './pages/enterprise/QueryOptimizer'
 import { useAuthStore } from './store'
 
 const qc = new QueryClient()
@@ -54,6 +56,8 @@ export default function App() {
             <Route path="/schedules"       element={<ScheduledReports />} />
             <Route path="/security"        element={<SecurityPolicies />} />
             <Route path="/observability"   element={<Observability />} />
+            <Route path="/agent"            element={<DataAgent />} />
+            <Route path="/optimizer"        element={<QueryOptimizer />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

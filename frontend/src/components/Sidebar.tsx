@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   BarChart2, MessageSquare, TrendingUp, AlertTriangle, FileText,
   Moon, Sun, LogOut, Database, History, ShieldCheck, Brain,
-  GitCompare, Bell, Calendar, Lock, Activity, ChevronDown, ChevronRight
+  GitCompare, Bell, Calendar, Lock, Activity, ChevronDown, ChevronRight, Bot
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore, useThemeStore } from '../store'
@@ -11,6 +11,8 @@ import clsx from 'clsx'
 const CORE_NAV = [
   { to: '/',          icon: BarChart2,     label: 'Dashboard'   },
   { to: '/chat',      icon: MessageSquare, label: 'Ask AI'      },
+  { to: '/agent',     icon: Bot,           label: 'AI Agent'    },
+  { to: '/optimizer',  icon: Zap,           label: 'Query Optimizer' },
   { to: '/forecast',  icon: TrendingUp,    label: 'Forecast'    },
   { to: '/anomalies', icon: AlertTriangle, label: 'Anomalies'   },
   { to: '/reports',   icon: FileText,      label: 'Reports'     },

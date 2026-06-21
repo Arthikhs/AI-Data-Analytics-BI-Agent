@@ -76,7 +76,8 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                   "/v3/api-docs/**", "/v3/api-docs").permitAll()
                 .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "ANALYST", "VIEWER")
-                .requestMatchers("/api/query/**", "/api/insights/**", "/api/forecast/**").hasAnyRole("ADMIN", "ANALYST")
+                .requestMatchers("/api/query/**", "/api/insights/**", "/api/forecast/**", "/api/optimizer/**").hasAnyRole("ADMIN", "ANALYST")
+                .requestMatchers("/api/agent/**").hasAnyRole("ADMIN", "ANALYST")
                 .requestMatchers("/api/reports/**").hasAnyRole("ADMIN", "ANALYST")
                 .requestMatchers("/api/enterprise/schema/**", "/api/enterprise/data-quality",
                                   "/api/enterprise/observability/**").hasAnyRole("ADMIN", "ANALYST", "VIEWER")

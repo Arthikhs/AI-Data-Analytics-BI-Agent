@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import query, insights, forecast, anomaly, reports
+from app.routers import query, insights, forecast, anomaly, reports, optimizer
 from app.routers.enterprise.enterprise_router import router as enterprise_router
+from app.routers.agent.agent_router import router as agent_router
 from app.services.enterprise.observability import record_metric
 from app.services.enterprise.scheduled_reports import run_due_schedules
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -29,6 +30,8 @@ app.include_router(forecast.router,    prefix="/forecast",           tags=["Fore
 app.include_router(anomaly.router,     prefix="/anomaly",            tags=["Anomaly"])
 app.include_router(reports.router,     prefix="/reports",            tags=["Reports"])
 app.include_router(enterprise_router,  prefix="/enterprise",         tags=["Enterprise"])
+app.include_router(agent_router,        prefix="/agent",               tags=["AI Agent"])
+app.include_router(optimizer.router,    prefix="/optimize-query",      tags=["Query Optimizer"])
 
 Instrumentator().instrument(app).expose(app)
 

@@ -50,6 +50,19 @@ query:
   allowed-operations:
     - SELECT
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
 logging:
   level:
     com.biagent: DEBUG
