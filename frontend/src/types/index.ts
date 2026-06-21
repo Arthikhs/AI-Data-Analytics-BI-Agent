@@ -52,6 +52,7 @@ export interface ForecastData {
 
 export interface AnomalyItem {
   date: string
+  dataset: string
   type: string
   actual: number
   expected: number

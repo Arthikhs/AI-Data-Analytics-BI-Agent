@@ -1,0 +1,105 @@
+{
+  "uid": "bi-platform-overview",
+  "title": "AI BI Platform — Overview",
+  "tags": ["bi-platform"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "API Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [{
+        "expr": "rate(http_requests_total[1m])",
+        "legendFormat": "{{method}} {{handler}}",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 2,
+      "title": "API Latency P95 (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+        "legendFormat": "p95 {{handler}}",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 3,
+      "title": "HTTP Error Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [{
+        "expr": "rate(http_requests_total{status=~\"5..\"}[1m])",
+        "legendFormat": "5xx errors {{handler}}",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "fixedColor": "red", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Total Requests (Last Hour)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
+      "targets": [{
+        "expr": "sum(increase(http_requests_total[1h]))",
+        "legendFormat": "Total",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "fixedColor": "blue", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 5,
+      "title": "AI Service Health",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
+      "targets": [{
+        "expr": "up{job=\"ai-service\"}",
+        "legendFormat": "AI Service",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "red", "value": 0 }, { "color": "green", "value": 1 }]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Request Duration Heatmap",
+      "type": "heatmap",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+      "targets": [{
+        "expr": "sum(rate(http_request_duration_seconds_bucket[5m])) by (le)",
+        "legendFormat": "{{le}}",
+        "datasource": "Prometheus",
+        "format": "heatmap"
+      }]
+    }
+  ]
+}

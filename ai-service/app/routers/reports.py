@@ -1,4 +1,5 @@
 import io
+import csv
 import json
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
@@ -8,8 +9,17 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    EXCEL_AVAILABLE = True
+except ImportError:
+    EXCEL_AVAILABLE = False
+
 router = APIRouter()
 
+
+# ─── PDF ──────────────────────────────────────────────────────────────────────
 
 @router.post("/generate")
 def generate_report(body: dict):
@@ -18,21 +28,99 @@ def generate_report(body: dict):
     title = body.get("title", "Business Intelligence Report")
 
     buf = io.BytesIO()
-    try:
-        doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=inch * 0.75, leftMargin=inch * 0.75,
-                                topMargin=inch, bottomMargin=inch)
-        story = _build_story(kpis, insights, title)
-        doc.build(story)
-        buf.seek(0)
-    except Exception:
-        buf.close()
-        raise
+    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=inch * 0.75, leftMargin=inch * 0.75,
+                            topMargin=inch, bottomMargin=inch)
+    doc.build(_build_story(kpis, insights, title))
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="application/pdf",
+                             headers={"Content-Disposition": f'attachment; filename="{_safe(title)}.pdf"'})
 
+
+# ─── CSV ──────────────────────────────────────────────────────────────────────
+
+@router.post("/export/csv")
+def export_csv(body: dict):
+    data: list = body.get("data", [])
+    filename: str = body.get("filename", "export")
+
+    if not data:
+        return StreamingResponse(iter([""]), media_type="text/csv")
+
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=data[0].keys())
+    writer.writeheader()
+    writer.writerows(data)
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{_safe(filename)}.csv"'}
+    )
+
+
+# ─── Excel ────────────────────────────────────────────────────────────────────
+
+@router.post("/export/excel")
+def export_excel(body: dict):
+    data: list = body.get("data", [])
+    filename: str = body.get("filename", "export")
+    sheet_name: str = body.get("sheet_name", "Data")
+    kpis: dict = body.get("kpis", {})
+
+    buf = io.BytesIO()
+    wb = openpyxl.Workbook()
+
+    # ── KPI sheet (if provided) ──
+    if kpis:
+        ws_kpi = wb.active
+        ws_kpi.title = "KPI Summary"
+        header_fill = PatternFill("solid", fgColor="2563EB")
+        header_font = Font(bold=True, color="FFFFFF")
+        ws_kpi.append(["Metric", "Value"])
+        for cell in ws_kpi[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+        kpi_labels = {
+            "totalRevenue": "Total Revenue", "totalOrders": "Total Orders",
+            "avgOrderValue": "Avg Order Value", "grossProfit": "Gross Profit",
+            "revenueGrowthPct": "Revenue Growth %", "totalCustomers": "Total Customers",
+        }
+        for key, label in kpi_labels.items():
+            if key in kpis:
+                ws_kpi.append([label, kpis[key]])
+        ws_kpi.column_dimensions['A'].width = 25
+        ws_kpi.column_dimensions['B'].width = 18
+
+    # ── Data sheet ──
+    if data:
+        ws_data = wb.create_sheet(title=sheet_name)
+        headers = list(data[0].keys())
+        ws_data.append(headers)
+        header_fill2 = PatternFill("solid", fgColor="1E3A5F")
+        header_font2 = Font(bold=True, color="FFFFFF")
+        for cell in ws_data[1]:
+            cell.fill = header_fill2
+            cell.font = header_font2
+            cell.alignment = Alignment(horizontal="center")
+        for row in data:
+            ws_data.append([row.get(h, "") for h in headers])
+        for col in ws_data.columns:
+            ws_data.column_dimensions[col[0].column_letter].width = 18
+
+    if not kpis and not data:
+        wb.active.title = "Empty"
+
+    wb.save(buf)
+    buf.seek(0)
     return StreamingResponse(
         buf,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{title.replace(" ", "_")}.pdf"'}
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{_safe(filename)}.xlsx"'}
     )
+
+
+def _safe(name: str) -> str:
+    return name.replace(" ", "_").replace("/", "-")[:60]
 
 
 def _build_story(kpis: dict, insights: dict, title: str) -> list:

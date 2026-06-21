@@ -82,6 +82,13 @@ def evaluate_alerts(kpis: Dict[str, Any], anomaly_count: int = 0,
             existing.insert(0, alert)
         _redis.setex(f"alerts:{username}", 86400, json.dumps(existing[:100]))
 
+        # Dispatch email + Slack notifications
+        try:
+            from app.services.enterprise.notification_service import dispatch_alerts
+            dispatch_alerts(triggered)
+        except Exception:
+            pass
+
     return triggered
 
 

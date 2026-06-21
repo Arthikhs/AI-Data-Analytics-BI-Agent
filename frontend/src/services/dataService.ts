@@ -25,17 +25,23 @@ export const insightService = {
 }
 
 export const forecastService = {
-  get: (metric = 'revenue', periods = 30) =>
-    api.post<ForecastData>('/forecast', { metric, periods }).then(r => r.data),
+  get: (metric = 'revenue', periods = 30, dataset = 'ecommerce') =>
+    api.post<ForecastData>('/forecast', { metric, periods, dataset }).then(r => r.data),
 }
 
 export const anomalyService = {
-  detect: () => api.get('/anomaly').then(r => r.data),
+  detect: (dataset = 'all') => api.get('/anomaly', { params: { dataset } }).then(r => r.data),
 }
 
 export const reportService = {
   generatePdf: (kpis: unknown, insights: unknown, title: string) =>
     api.post('/reports/generate', { kpis, insights, title }, { responseType: 'blob' }).then(r => r.data),
+
+  exportCsv: (data: unknown[], filename: string) =>
+    api.post('/reports/export/csv', { data, filename }, { responseType: 'blob' }).then(r => r.data),
+
+  exportExcel: (data: unknown[], kpis: unknown, filename: string) =>
+    api.post('/reports/export/excel', { data, kpis, filename, sheet_name: 'Analytics Data' }, { responseType: 'blob' }).then(r => r.data),
 }
 
 // ─── Enterprise Services ──────────────────────────────────────────────────────────

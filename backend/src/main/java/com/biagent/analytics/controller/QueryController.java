@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,13 +41,16 @@ public class QueryController {
      * Generates SQL + executes it + suggests chart type
      */
     @PostMapping("/run")
-    public ResponseEntity<QueryResponse> runQuery(@Valid @RequestBody QueryRequest request) {
+    public ResponseEntity<QueryResponse> runQuery(@Valid @RequestBody QueryRequest request,
+                                                   Authentication auth) {
         String sessionId = ensureSession(request.getSessionId());
+        String role = auth != null ? auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).findFirst().orElse(null) : null;
         long start = System.currentTimeMillis();
 
         try {
             String sql = aiServiceClient.generateSql(request.getQuestion(), request.getDataset(), sessionId);
-            List<Map<String, Object>> data = queryExecutionService.executeQuery(sql, request.getMaxRows());
+            List<Map<String, Object>> data = queryExecutionService.executeQuery(sql, request.getMaxRows(), role);
             String chartType = aiServiceClient.suggestChartType(request.getQuestion(), data);
 
             return ResponseEntity.ok(QueryResponse.builder()

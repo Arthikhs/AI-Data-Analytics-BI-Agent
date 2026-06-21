@@ -23,10 +23,11 @@ public class AnomalyController {
     private String aiServiceUrl;
 
     @GetMapping
-    public ResponseEntity<Map> detectAnomalies() {
+    public ResponseEntity<Map> detectAnomalies(
+            @RequestParam(defaultValue = "all") String dataset) {
         URI uri;
         try {
-            uri = new URI(aiServiceUrl + "/anomaly");
+            uri = new URI(aiServiceUrl + "/anomaly?dataset=" + dataset);
             if (!uri.getScheme().equals("http") && !uri.getScheme().equals("https")) {
                 throw new IllegalArgumentException("Invalid URI scheme");
             }

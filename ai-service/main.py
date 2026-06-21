@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import query, insights, forecast, anomaly, reports
 from app.routers.enterprise.enterprise_router import router as enterprise_router
 from app.services.enterprise.observability import record_metric
+from app.services.enterprise.scheduled_reports import run_due_schedules
 from prometheus_fastapi_instrumentator import Instrumentator
+from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import uvicorn
 
@@ -20,16 +22,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(query.router,    prefix="/generate-sql",      tags=["Query"])
-app.include_router(query.chart_router, prefix="/suggest-chart",  tags=["Query"])
-app.include_router(insights.router, prefix="/generate-insights", tags=["Insights"])
-app.include_router(forecast.router, prefix="/forecast",          tags=["Forecast"])
-app.include_router(anomaly.router,  prefix="/anomaly",           tags=["Anomaly"])
-app.include_router(reports.router,     prefix="/reports",           tags=["Reports"])
+app.include_router(query.router,       prefix="/generate-sql",      tags=["Query"])
+app.include_router(query.chart_router, prefix="/suggest-chart",     tags=["Query"])
+app.include_router(insights.router,    prefix="/generate-insights",  tags=["Insights"])
+app.include_router(forecast.router,    prefix="/forecast",           tags=["Forecast"])
+app.include_router(anomaly.router,     prefix="/anomaly",            tags=["Anomaly"])
+app.include_router(reports.router,     prefix="/reports",            tags=["Reports"])
 app.include_router(enterprise_router,  prefix="/enterprise",         tags=["Enterprise"])
 
 Instrumentator().instrument(app).expose(app)
 
+# ─── Background scheduler ─────────────────────────────────────────────────────
+_scheduler = BackgroundScheduler()
+_scheduler.add_job(run_due_schedules, "interval", minutes=1, id="report_scheduler")
+
+@app.on_event("startup")
+def startup():
+    _scheduler.start()
+
+@app.on_event("shutdown")
+def shutdown():
+    _scheduler.shutdown(wait=False)
+
+# ─── Observability middleware ─────────────────────────────────────────────────
 @app.middleware("http")
 async def observability_middleware(request: Request, call_next):
     start = time.perf_counter()

@@ -193,6 +193,23 @@ def alerts_mark_read(req: MarkReadRequest):
     return {"ok": True}
 
 
+class TestNotifyRequest(BaseModel):
+    email_recipients: List[str] = []
+
+
+@router.post("/alerts/test-notify")
+def alerts_test_notify(req: TestNotifyRequest):
+    from app.services.enterprise.notification_service import dispatch_alerts
+    test_alert = [{
+        "id": "test", "name": "Test Alert", "severity": "info",
+        "message": "This is a test notification from AI BI Platform.",
+        "actual_value": 42, "threshold": 0,
+        "triggered_at": datetime.utcnow().isoformat(),
+    }]
+    result = dispatch_alerts(test_alert, req.email_recipients)
+    return {"dispatched": result}
+
+
 # ─── Feature 8: Scheduled Reports ─────────────────────────────────────────────
 
 class CreateScheduleRequest(BaseModel):
@@ -264,6 +281,13 @@ class ApplyRlsRequest(BaseModel):
 class MaskRequest(BaseModel):
     data: List[Dict[str, Any]]
     role: str
+
+
+@router.post("/rls/apply")
+def rls_apply_sql(req: ApplyRlsRequest):
+    from app.services.enterprise.rls_service import apply_row_level_filter
+    filtered = apply_row_level_filter(req.sql, req.role)
+    return {"sql": filtered, "role": req.role}
 
 
 @router.get("/rls/policies")
